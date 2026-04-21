@@ -2,7 +2,6 @@
 
 namespace App\Modules\Product\Application;
 
-use App\Modules\Product\Infrastructure\Interfaces\ProductRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class PaginateProductsAction

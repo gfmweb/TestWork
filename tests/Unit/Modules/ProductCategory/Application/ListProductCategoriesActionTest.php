@@ -37,4 +37,34 @@ class ListProductCategoriesActionTest extends TestCase
             array_map(static fn (ProductCategoryRowDTO $row): array => $row->toArray(), $rows)
         );
     }
+
+    public function test_execute_excludes_soft_deleted_categories_by_default(): void
+    {
+        $active = ProductCategory::factory()->create(['name' => 'Активная']);
+        $deleted = ProductCategory::factory()->create(['name' => 'Удалённая']);
+        $deleted->delete();
+
+        $action = app(ListProductCategoriesAction::class);
+        $rows = $action->execute(new ProductCategoryCriteriaDTO);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame($active->id, $rows[0]->id);
+    }
+
+    public function test_execute_includes_soft_deleted_when_with_trashed_is_true(): void
+    {
+        $active = ProductCategory::factory()->create(['name' => 'Активная']);
+        $deleted = ProductCategory::factory()->create(['name' => 'Удалённая']);
+        $deleted->delete();
+
+        $action = app(ListProductCategoriesAction::class);
+        $rows = $action->execute(new ProductCategoryCriteriaDTO(withTrashed: true));
+
+        $this->assertCount(2, $rows);
+        $ids = array_map(static fn (ProductCategoryRowDTO $row): int => $row->id, $rows);
+        sort($ids);
+        $expected = [$active->id, $deleted->id];
+        sort($expected);
+        $this->assertSame($expected, $ids);
+    }
 }

@@ -177,4 +177,20 @@ class ProductsApiTest extends TestCase
                 trans('product::validation.per_page.min', ['min' => 1])
             );
     }
+
+    public function test_products_endpoint_rejects_soft_deleted_category_id(): void
+    {
+        app()->setLocale('ru');
+
+        $category = ProductCategory::factory()->create();
+        $category->delete();
+
+        $response = $this->getJson('/api/products?category_id='.$category->id);
+
+        $response->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.category_id.0',
+                trans('product::validation.category_id.exists')
+            );
+    }
 }

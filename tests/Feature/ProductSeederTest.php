@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Modules\Product\Infrastructure\database\seeders\ProductSeeder;
 use App\Modules\Product\Infrastructure\Models\Product;
+use App\Modules\ProductCategory\Infrastructure\database\seeders\ProductCategorySeeder;
 use App\Modules\ProductCategory\Infrastructure\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,7 +15,10 @@ class ProductSeederTest extends TestCase
 
     public function test_product_seeder_creates_250_products_with_valid_fields_and_relations(): void
     {
-        $this->seed(ProductSeeder::class);
+        $this->seed([
+            ProductCategorySeeder::class,
+            ProductSeeder::class,
+        ]);
 
         $this->assertSame(250, Product::query()->count());
         $this->assertGreaterThanOrEqual(1, ProductCategory::query()->count());

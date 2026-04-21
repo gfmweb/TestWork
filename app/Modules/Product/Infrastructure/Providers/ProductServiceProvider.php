@@ -2,7 +2,7 @@
 
 namespace App\Modules\Product\Infrastructure\Providers;
 
-use App\Modules\Product\Infrastructure\Interfaces\ProductRepositoryInterface;
+use App\Modules\Product\Application\ProductRepositoryInterface;
 use App\Modules\Product\Infrastructure\Repositories\EloquentProductRepository;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;

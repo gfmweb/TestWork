@@ -36,4 +36,42 @@ class ProductCategoriesApiTest extends TestCase
             $response->json('data')
         );
     }
+
+    public function test_categories_endpoint_excludes_soft_deleted_by_default(): void
+    {
+        $active = ProductCategory::factory()->create(['name' => 'Видимая']);
+        $deleted = ProductCategory::factory()->create(['name' => 'Скрытая']);
+        $deleted->delete();
+
+        $response = $this->getJson('/api/product-categories');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame($active->id, $response->json('data.0.id'));
+    }
+
+    public function test_categories_endpoint_includes_soft_deleted_when_with_trashed_true(): void
+    {
+        $active = ProductCategory::factory()->create(['name' => 'Видимая']);
+        $deleted = ProductCategory::factory()->create(['name' => 'Скрытая']);
+        $deleted->delete();
+
+        $response = $this->getJson('/api/product-categories?with_trashed=true');
+
+        $response->assertOk();
+        $this->assertCount(2, $response->json('data'));
+    }
+
+    public function test_categories_endpoint_validation_rejects_invalid_with_trashed(): void
+    {
+        app()->setLocale('ru');
+
+        $response = $this->getJson('/api/product-categories?with_trashed=yes');
+
+        $response->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.with_trashed.0',
+                trans('product-category::validation.with_trashed.in')
+            );
+    }
 }

@@ -1,9 +1,7 @@
 <?php
 
-namespace App\Modules\Product\Infrastructure\Interfaces;
+namespace App\Modules\Product\Application;
 
-use App\Modules\Product\Application\ProductCriteriaDTO;
-use App\Modules\Product\Application\ProductRowDTO;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProductRepositoryInterface

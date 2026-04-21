@@ -2,8 +2,6 @@
 
 namespace App\Modules\ProductCategory\Application;
 
-use App\Modules\ProductCategory\Infrastructure\Interfaces\ProductCategoryRepositoryInterface;
-
 final class ListProductCategoriesAction
 {
     public function __construct(
