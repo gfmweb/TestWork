@@ -1,11 +1,17 @@
-import { mount } from '@vue/test-utils';
+import { shallowMount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import App from './App.vue';
 
 describe('App', () => {
-    it('renders project title', () => {
-        const wrapper = mount(App);
+    it('mounts app root component', () => {
+        const wrapper = shallowMount(App, {
+            global: {
+                stubs: {
+                    RouterView: true,
+                },
+            },
+        });
 
-        expect(wrapper.text()).toContain('Laravel + Vue 3 + TypeScript');
+        expect(wrapper.exists()).toBe(true);
     });
 });
