@@ -164,4 +164,17 @@ class ProductsApiTest extends TestCase
         );
         $this->assertSame([$newest->id, $newer->id, $older->id], $ids);
     }
+
+    public function test_products_endpoint_validation_uses_module_translations(): void
+    {
+        ProductCategory::factory()->create();
+
+        $response = $this->getJson('/api/products?per_page=0');
+
+        $response->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.per_page.0',
+                trans('product::validation.per_page.min', ['min' => 1])
+            );
+    }
 }

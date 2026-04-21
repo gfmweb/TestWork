@@ -2,8 +2,8 @@
 
 namespace App\Modules\Product\Infrastructure\Models;
 
+use App\Modules\Product\Infrastructure\database\factories\ProductFactory;
 use App\Modules\ProductCategory\Infrastructure\Models\ProductCategory;
-use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -1,6 +1,6 @@
 DC := docker compose
 
-.PHONY: help up restart up-dev connect-app connect-front connect-db build-front test-front analyse pint-test pint-fix qa init
+.PHONY: help up restart up-dev connect-app connect-front connect-db build-front test-back test-unit test-front analyse pint-test pint-fix qa init
 
 help:
 	@echo "Available commands:"
@@ -11,11 +11,13 @@ help:
 	@echo "  make connect-front - Открыть shell в контейнере front"
 	@echo "  make connect-db    - Открыть shell в контейнере db"
 	@echo "  make build-front   - Собрать frontend assets в контейнере front"
+	@echo "  make test-back     - Запустить все backend-тесты (PHPUnit) в контейнере app"
+	@echo "  make test-unit     - Запустить только Unit-тесты backend в контейнере app"
 	@echo "  make test-front    - Запустить юнит тесты в контейнере front"
 	@echo "  make analyse       - Запустить статический анализ кода в контейнере app"
 	@echo "  make pint-test     - Запустить проверку стиля кода с Pint в контейнере app"
 	@echo "  make pint-fix      - Автоматически исправить проблемы стиля кода с Pint в контейнере app"
-	@echo "  make qa            - Запустить frontend тесты, статический анализ и проверку стиля кода"
+	@echo "  make qa            - Запустить backend и frontend тесты, статический анализ и проверку стиля кода"
 	@echo "  make init          - Создать контейнеры без кэша, подготовить окружение, мигрировать и заполнить базу данных"
 
 up:
@@ -40,6 +42,12 @@ connect-db:
 build-front:
 	$(DC) exec front npm run build
 
+test-back:
+	$(DC) exec app php artisan test
+
+test-unit:
+	$(DC) exec app php artisan test --testsuite=Unit
+
 test-front:
 	$(DC) exec front npm run test
 
@@ -52,7 +60,7 @@ pint-test:
 pint-fix:
 	$(DC) exec app php vendor/bin/pint
 
-qa: test-front analyse pint-test
+qa: test-back test-front analyse pint-test
 
 init:
 	$(DC) build --no-cache

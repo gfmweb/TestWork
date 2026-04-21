@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace App\Modules\Product\Infrastructure\database\factories;
 
 use App\Modules\Product\Infrastructure\Models\Product;
 use App\Modules\ProductCategory\Infrastructure\Models\ProductCategory;

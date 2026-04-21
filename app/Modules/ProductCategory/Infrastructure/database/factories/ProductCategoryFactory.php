@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace App\Modules\ProductCategory\Infrastructure\database\factories;
 
 use App\Modules\ProductCategory\Infrastructure\Models\ProductCategory;
 use App\Services\SlugService;

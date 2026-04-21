@@ -1,6 +1,6 @@
 <?php
 
-use App\Modules\ProductCategory\Infrastructure\Http\Controllers\ProductCategoryIndexController;
+use App\Modules\ProductCategory\Presentation\Http\Controllers\ProductCategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/product-categories/ping', static fn (): array => [
@@ -8,4 +8,4 @@ Route::get('/product-categories/ping', static fn (): array => [
     'status' => 'ok',
 ]);
 
-Route::get('/product-categories', ProductCategoryIndexController::class);
+Route::get('/product-categories', ProductCategoryController::class);

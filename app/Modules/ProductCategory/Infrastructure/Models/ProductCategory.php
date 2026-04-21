@@ -3,7 +3,7 @@
 namespace App\Modules\ProductCategory\Infrastructure\Models;
 
 use App\Modules\Product\Infrastructure\Models\Product;
-use Database\Factories\ProductCategoryFactory;
+use App\Modules\ProductCategory\Infrastructure\database\factories\ProductCategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

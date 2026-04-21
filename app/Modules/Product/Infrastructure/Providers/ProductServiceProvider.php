@@ -2,6 +2,8 @@
 
 namespace App\Modules\Product\Infrastructure\Providers;
 
+use App\Modules\Product\Infrastructure\Interfaces\ProductRepositoryInterface;
+use App\Modules\Product\Infrastructure\Repositories\EloquentProductRepository;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -9,6 +11,8 @@ class ProductServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(ProductRepositoryInterface::class, EloquentProductRepository::class);
+
         $this->mergeConfigFrom(
             __DIR__.'/../config/product.php',
             'product',

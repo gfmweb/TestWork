@@ -2,6 +2,8 @@
 
 namespace App\Modules\ProductCategory\Infrastructure\Providers;
 
+use App\Modules\ProductCategory\Infrastructure\Interfaces\ProductCategoryRepositoryInterface;
+use App\Modules\ProductCategory\Infrastructure\Repositories\EloquentProductCategoryRepository;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -9,6 +11,8 @@ class ProductCategoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(ProductCategoryRepositoryInterface::class, EloquentProductCategoryRepository::class);
+
         $this->mergeConfigFrom(
             __DIR__.'/../config/product-category.php',
             'product_category',
