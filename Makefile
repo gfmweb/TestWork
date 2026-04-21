@@ -57,8 +57,9 @@ qa: test-front analyse pint-test
 init:
 	$(DC) build --no-cache
 	@test -f .env || cp .env.example .env
-	$(DC) up -d
-	$(DC) exec app composer install
+	$(DC) up -d db front
+	$(DC) run --rm app sh -lc "rm -rf vendor && COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress"
+	$(DC) up -d app
 	$(DC) exec front npm install
 	$(DC) exec app php artisan key:generate
 	$(DC) exec app php artisan migrate:fresh --seed --force
