@@ -16,7 +16,22 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $name = 'Товар '.$this->faker->unique()->numberBetween(1, 1000000);
+        $russianWords = [
+            'Ветер',
+            'Рассвет',
+            'Берег',
+            'Огонь',
+            'Лист',
+            'Камень',
+            'Снег',
+            'Свет',
+            'Город',
+            'Полет',
+            'Волна',
+            'Север',
+        ];
+
+        $name = $this->faker->randomElement($russianWords).' '.$this->faker->unique()->numberBetween(1, 1000000);
 
         return [
             'name' => $name,

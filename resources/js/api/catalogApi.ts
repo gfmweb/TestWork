@@ -1,10 +1,10 @@
-import type { Category, PaginatedResponse, Product } from '../types/catalog';
+import type { CatalogFilters, Category, PaginatedResponse, Product } from '../types/catalog';
 
 interface CategoriesResponse {
     data: Category[];
 }
 
-function toQueryString(params: Record<string, number | undefined>): string {
+function toQueryString(params: Record<string, string | number | boolean | undefined>): string {
     const searchParams = new URLSearchParams();
 
     Object.entries(params).forEach(([key, value]) => {
@@ -26,12 +26,19 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 export async function fetchProducts(params: {
-    categoryId?: number;
+    filters?: CatalogFilters;
     page?: number;
     perPage?: number;
 }): Promise<PaginatedResponse<Product>> {
+    const filters = params.filters ?? {};
     const query = toQueryString({
-        category_id: params.categoryId,
+        q: filters.q,
+        price_from: filters.priceFrom,
+        price_to: filters.priceTo,
+        category_id: filters.categoryId,
+        in_stock: filters.inStock,
+        rating_from: filters.ratingFrom,
+        sort: filters.sort,
         page: params.page,
         per_page: params.perPage,
     });
