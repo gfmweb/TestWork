@@ -61,4 +61,4 @@ init:
 	$(DC) exec app composer install
 	$(DC) exec front npm install
 	$(DC) exec app php artisan key:generate
-	$(DC) exec app php artisan migrate --seed --force
+	$(DC) exec app php artisan migrate:fresh --seed --force
