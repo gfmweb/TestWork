@@ -3,12 +3,36 @@ import { describe, expect, it } from 'vitest';
 import AppPagination from './AppPagination.vue';
 
 describe('AppPagination', () => {
-    it('renders nothing when totalPages <= 1', () => {
+    it('renders nothing when totalPages <= 1 and total is not passed', () => {
         const wrapper = mount(AppPagination, {
             props: { currentPage: 1, totalPages: 1 },
         });
 
         expect(wrapper.find('nav').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('В выборке');
+    });
+
+    it('shows selection count when total is passed even on a single page', () => {
+        const wrapper = mount(AppPagination, {
+            props: {
+                currentPage: 1,
+                totalPages: 1,
+                total: 7,
+                from: 1,
+                to: 7,
+            },
+        });
+
+        expect(wrapper.find('nav').exists()).toBe(false);
+        expect(wrapper.text()).toContain('Показано 1–7 из 7');
+    });
+
+    it('shows total when from/to are missing', () => {
+        const wrapper = mount(AppPagination, {
+            props: { currentPage: 1, totalPages: 1, total: 12 },
+        });
+
+        expect(wrapper.text()).toContain('В выборке доступно записей: 12');
     });
 
     it('renders page buttons when totalPages > 1', () => {

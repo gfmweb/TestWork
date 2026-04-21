@@ -92,16 +92,23 @@
                         <option value="true">Только в наличии</option>
                         <option value="false">Только отсутствующие</option>
                     </select>
-                    <input
-                        v-model.number="filtersForm.rating_from"
-                        type="number"
-                        min="0"
-                        max="5"
-                        step="0.1"
-                        placeholder="Рейтинг от"
-                        class="rounded-lg border border-white/40 bg-white/30 px-3 py-2 text-sm text-slate-800"
-                        @change="applyFilters"
-                    />
+                    <div
+                        class="flex min-w-0 flex-col gap-2 rounded-lg border border-white/40 bg-white/30 px-3 py-2 sm:col-span-2 xl:col-span-1"
+                    >
+                        <div class="flex items-center justify-between gap-2 text-xs text-slate-700">
+                            <span class="font-medium text-slate-800">Рейтинг от</span>
+                            <span class="tabular-nums text-slate-900">{{ ratingFromDisplay }}</span>
+                        </div>
+                        <input
+                            v-model.number="filtersForm.rating_from"
+                            type="range"
+                            min="0"
+                            max="5"
+                            step="0.1"
+                            class="h-2 w-full cursor-pointer accent-slate-700"
+                            @input="scheduleSearchApply"
+                        />
+                    </div>
                     <select
                         v-model="filtersForm.sort"
                         class="rounded-lg border border-white/40 bg-white/30 px-3 py-2 text-sm text-slate-800"
@@ -112,6 +119,24 @@
                         <option value="price_desc">Цена по убыванию</option>
                         <option value="rating_desc">Рейтинг по убыванию</option>
                     </select>
+                </div>
+                <div
+                    v-if="productsValidationErrors !== null"
+                    class="mb-4 rounded-lg border border-rose-300/80 bg-rose-50/90 px-3 py-2 text-sm text-rose-900"
+                    data-testid="products-validation-errors"
+                >
+                    <p class="font-medium">
+                        Некорректные параметры фильтра
+                    </p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5">
+                        <li
+                            v-for="([field, messages]) in productsValidationErrorEntries"
+                            :key="field"
+                        >
+                            <span class="font-medium">{{ field }}:</span>
+                            {{ messages.join(' ') }}
+                        </li>
+                    </ul>
                 </div>
                 <div class="mb-4">
                     <button
@@ -136,7 +161,7 @@
                     Не удалось загрузить товары.
                 </p>
                 <p
-                    v-else-if="productsPage.data.length === 0"
+                    v-else-if="productsPage.data.length === 0 && productsValidationErrors === null"
                     class="text-sm text-slate-600"
                 >
                     В выбранной категории пока нет товаров.
@@ -173,8 +198,12 @@
                 </ul>
 
                 <AppPagination
+                    v-if="!productsLoading && !productsError && productsValidationErrors === null"
                     :current-page="productsPage.current_page"
                     :total-pages="productsPage.last_page"
+                    :total="productsPage.total"
+                    :from="productsPage.from"
+                    :to="productsPage.to"
                     @change="selectPage"
                 />
             </GlassCard>
@@ -185,7 +214,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { fetchCategories, fetchProducts } from '../api/catalogApi';
+import { ApiHttpError, fetchCategories, fetchProducts, isLaravelValidationBody } from '../api/catalogApi';
 import AppPagination from '../components/AppPagination.vue';
 import GlassCard from '../components/GlassCard.vue';
 import type { CatalogFilters, Category, PaginatedResponse, Product, ProductSort } from '../types/catalog';
@@ -199,6 +228,7 @@ const categoriesError = ref(false);
 
 const productsLoading = ref(false);
 const productsError = ref(false);
+const productsValidationErrors = ref<Record<string, string[]> | null>(null);
 
 const productsPage = ref<PaginatedResponse<Product>>({
     current_page: 1,
@@ -217,7 +247,8 @@ type FiltersFormState = {
     price_from: number | undefined;
     price_to: number | undefined;
     in_stock: '' | 'true' | 'false';
-    rating_from: number | undefined;
+    /** 0 = без фильтра; иначе минимальный рейтинг 0.1–5 */
+    rating_from: number;
     sort: ProductSort;
 };
 
@@ -240,12 +271,20 @@ const filtersForm = ref<FiltersFormState>({
     price_from: undefined,
     price_to: undefined,
     in_stock: '',
-    rating_from: undefined,
+    rating_from: 0,
     sort: 'newest',
 });
 let searchDebounceTimeout: ReturnType<typeof setTimeout> | undefined;
 
 const totalProducts = computed(() => categories.value.reduce((sum, item) => sum + item.products_count, 0));
+
+const ratingFromDisplay = computed(() =>
+    filtersForm.value.rating_from === 0 ? 'любой' : filtersForm.value.rating_from.toFixed(1),
+);
+
+const productsValidationErrorEntries = computed(() =>
+    productsValidationErrors.value === null ? [] : Object.entries(productsValidationErrors.value),
+);
 
 function formatPrice(price: string): string {
     const numericPrice = Number(price);
@@ -269,9 +308,24 @@ async function loadCategories(): Promise<void> {
     }
 }
 
+function emptyProductsPage(): PaginatedResponse<Product> {
+    return {
+        current_page: 1,
+        data: [],
+        from: null,
+        last_page: 1,
+        links: [],
+        path: '',
+        per_page: 15,
+        to: null,
+        total: 0,
+    };
+}
+
 async function loadProducts(): Promise<void> {
     productsLoading.value = true;
     productsError.value = false;
+    productsValidationErrors.value = null;
 
     try {
         productsPage.value = await fetchProducts({
@@ -279,8 +333,13 @@ async function loadProducts(): Promise<void> {
             page: currentPage.value,
             perPage: 15,
         });
-    } catch {
-        productsError.value = true;
+    } catch (error: unknown) {
+        if (error instanceof ApiHttpError && error.status === 422 && isLaravelValidationBody(error.body)) {
+            productsPage.value = emptyProductsPage();
+            productsValidationErrors.value = error.body.errors;
+        } else {
+            productsError.value = true;
+        }
     } finally {
         productsLoading.value = false;
     }
@@ -342,7 +401,7 @@ function syncFiltersFormFromQuery(): void {
         price_from: currentFilters.value.priceFrom,
         price_to: currentFilters.value.priceTo,
         in_stock: currentFilters.value.inStock === undefined ? '' : String(currentFilters.value.inStock) as 'true' | 'false',
-        rating_from: currentFilters.value.ratingFrom,
+        rating_from: currentFilters.value.ratingFrom ?? 0,
         sort: currentFilters.value.sort ?? 'newest',
     };
 }
@@ -354,7 +413,9 @@ async function applyFilters(): Promise<void> {
         price_to: filtersForm.value.price_to === undefined ? undefined : String(filtersForm.value.price_to),
         category_id: selectedCategoryId.value === null ? undefined : String(selectedCategoryId.value),
         in_stock: filtersForm.value.in_stock === '' ? undefined : filtersForm.value.in_stock,
-        rating_from: filtersForm.value.rating_from === undefined ? undefined : String(filtersForm.value.rating_from),
+        rating_from: filtersForm.value.rating_from === 0
+            ? undefined
+            : String(Math.round(filtersForm.value.rating_from * 10) / 10),
         sort: filtersForm.value.sort === 'newest' ? undefined : filtersForm.value.sort,
         page: '1',
     });
@@ -401,12 +462,14 @@ async function resetFilters(): Promise<void> {
         clearTimeout(searchDebounceTimeout);
     }
 
+    productsValidationErrors.value = null;
+
     filtersForm.value = {
         q: '',
         price_from: undefined,
         price_to: undefined,
         in_stock: '',
-        rating_from: undefined,
+        rating_from: 0,
         sort: 'newest',
     };
 

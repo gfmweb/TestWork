@@ -32,11 +32,15 @@ function makeFetchMock(categoriesData = mockCategories, productsData = makePagin
     return vi.fn().mockImplementation((url: string) => {
         if (typeof url === 'string' && url.includes('product-categories')) {
             return Promise.resolve({
+                ok: true,
+                status: 200,
                 json: () => Promise.resolve({ data: categoriesData }),
             });
         }
 
         return Promise.resolve({
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(productsData),
         });
     });

@@ -1,9 +1,19 @@
 <template>
-    <nav
-        v-if="totalPages > 1"
-        class="mt-4 flex flex-wrap items-center gap-2"
-        aria-label="Pagination"
+    <div
+        v-if="showBlock"
+        class="mt-4"
     >
+        <p
+            v-if="selectionSummary !== null"
+            class="mb-2 text-sm text-slate-600"
+        >
+            {{ selectionSummary }}
+        </p>
+        <nav
+            v-if="totalPages > 1"
+            class="flex flex-wrap items-center gap-2"
+            aria-label="Pagination"
+        >
         <button
             type="button"
             class="rounded-md border border-white/40 bg-white/30 px-3 py-1 text-sm text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
@@ -44,7 +54,8 @@
         >
             Вперед
         </button>
-    </nav>
+        </nav>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -53,7 +64,31 @@ import { computed } from 'vue';
 const props = defineProps<{
     currentPage: number;
     totalPages: number;
+    /** Общее число записей в текущей выборке (с учётом фильтров) */
+    total?: number;
+    from?: number | null;
+    to?: number | null;
 }>();
+
+const showBlock = computed(
+    () => props.totalPages > 1 || (props.total !== undefined && props.total >= 0),
+);
+
+const selectionSummary = computed((): string | null => {
+    if (props.total === undefined) {
+        return null;
+    }
+
+    if (props.total === 0) {
+        return 'В выборке доступно записей: 0';
+    }
+
+    if (props.from != null && props.to != null) {
+        return `Показано ${props.from}–${props.to} из ${props.total}`;
+    }
+
+    return `В выборке доступно записей: ${props.total}`;
+});
 
 defineEmits<{
     change: [page: number];
